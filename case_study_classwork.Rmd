@@ -2,13 +2,14 @@
 title: "casestudy_class_10_10"
 author: "Caleigh Dwyer"
 date: "2023-10-10"
-output: github_document
+output: html_document
 ---
 
 
 ```{r}
 library(tidyverse)
 library(p8105.datasets)
+library(ggridges)
 
 data(nyc_airbnb)
 
@@ -23,3 +24,170 @@ view(nyc_airbnb)
 
 
 -where are airbnbs most expensive?
+  -borough? neighborhood?
+  -room type? rating?
+-Where are airbnbs?
+
+```{r}
+nyc_airbnb |> 
+  count(borough)
+```
+
+
+chunk below will group means by another variable (or more than one variable)
+```{r}
+nyc_airbnb |> 
+  group_by(borough) |> 
+  summarize(mean_price = mean(price))
+
+## or
+
+nyc_airbnb |> 
+  group_by(borough, room_type) |> 
+  summarize(mean_price = mean(price))
+
+## or
+
+nyc_airbnb |> 
+  group_by(borough, room_type) |> 
+  summarize(mean_price = mean(price)) |> 
+  pivot_wider(
+    names_from = room_type,
+    values_from = mean_price
+  )
+
+##this one above is easier to read because spreads mean into different columns
+
+nyc_airbnb |> 
+  group_by(borough, room_type) |> 
+  summarize(median_price = median(price)) |> 
+  pivot_wider(
+    names_from = room_type,
+    values_from = median_price
+  )
+
+```
+
+
+```{r}
+nyc_airbnb |> 
+  ggplot(aes(x=price))+
+  geom_histogram()+
+  facet_grid(borough ~ room_type)
+
+##very skewed result, so we'll take out private room and shared room
+```
+
+```{r}
+nyc_airbnb |> 
+  filter(price >= 9500)
+
+## found some outliers
+```
+
+
+```{r}
+nyc_airbnb |> 
+  filter(price < 1000, room_type == "Entire home/apt") |> 
+  ggplot(aes(x = price)) +
+  geom_histogram()+
+  facet_grid(.~borough)
+```
+
+
+```{r}
+nyc_airbnb |> 
+  filter(
+    price <1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+    group_by(neighbourhood) |> 
+    summarize(
+      n_apt = n(),
+      mean_price = mean(price)) |> 
+  arrange(desc(mean_price))
+
+##desc shows from highest to lowest
+
+nyc_airbnb |> 
+  filter(
+    price <1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+    group_by(neighbourhood) |> 
+    summarize(
+      n_apt = n(),
+      mean_price = mean(price)) |> 
+  arrange((mean_price))
+
+##this shows from lowest to highest
+```
+
+
+```{r}
+nyc_airbnb |> 
+  filter(
+    price < 1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) |> 
+  ggplot(aes(x = neighbourhood, y = price))+
+  geom_boxplot()
+
+##you cant reorder a variable in ggplot, so you have to use mutate and then factor reorder (fct_reorder)
+
+nyc_airbnb |> 
+  filter(
+    price < 1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+  mutate(neighbourhood = fct_reorder(neighbourhood, price)) |> 
+  ggplot(aes(x = price, y = neighbourhood))+
+  geom_density_ridges()
+
+```
+
+##make a map
+```{r}
+nyc_airbnb |> 
+  filter(
+    price < 1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+  ggplot(aes(x = lat, y = long, color = price))+
+  geom_point()
+  
+```
+
+
+```{r}
+library(leaflet)
+
+nyc_airbnb |> 
+  filter(
+    price < 1000,
+    room_type == "Entire home/apt",
+    borough == "Manhattan") |> 
+  sample_n(500) |> 
+  leaflet() |> 
+  addTiles() |> 
+  addProviderTiles(providers$CartoDB.Positron) |> 
+  addCircleMarkers(~lat, ~long, radius = .5)
+
+##this maps our datapionts onto an actual map since we have latitude and longitude
+##the above doesn't knit together as a github doc, only as an html doc.
+```
+
+
+-how long are airbnbs active?
+-are airbnbs illegal and do they shut down?
+-which units have the most availability?
+-how is review score impacted by location?
+
+
+```{r}
+
+```
+
+
+
