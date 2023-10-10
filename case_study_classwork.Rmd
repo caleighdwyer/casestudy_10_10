@@ -1,0 +1,25 @@
+---
+title: "casestudy_class_10_10"
+author: "Caleigh Dwyer"
+date: "2023-10-10"
+output: github_document
+---
+
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+
+data(nyc_airbnb)
+
+nyc_airbnb =
+  nyc_airbnb |> 
+  rename(borough = neighbourhood_group) |> 
+  mutate(stars = review_scores_location/2)
+
+view(nyc_airbnb)
+  
+```
+
+
+-where are airbnbs most expensive?
